@@ -1,0 +1,27 @@
+__pycache__/
+.idea/
+.idea/*
+Pipfile
+src/
+
+# Unit test / coverage reports
+.coverage
+
+# Packages
+*.egg
+*.egg-info
+.eggs/
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+
+# Pypi
+testpypi
