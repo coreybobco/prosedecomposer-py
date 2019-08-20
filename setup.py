@@ -10,7 +10,7 @@ requirements = [
     'markovify==0.7.1',
     'nltk==3.4.4',
     'rdflib==4.2.2',
-    'spacy==2.1.8'
+    'spacy==2.1.8',
     'unittest2==1.1.0',
     'wordfreq>=2.2.1'
 ]
