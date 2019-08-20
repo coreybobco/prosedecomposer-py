@@ -3,7 +3,7 @@ Prose Decomposer
 
 
 .. image:: https://coveralls.io/repos/github/coreybobco/prosedecomposer-py/badge.svg?branch=master
-:target: https://coveralls.io/github/coreybobco/prosedecomposer-py?branch=master
+   :target: https://coveralls.io/github/coreybobco/prosedecomposer-py?branch=master
 
 What is this?
 ^^^^^^^^^^^^^
