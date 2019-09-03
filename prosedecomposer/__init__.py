@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 spacy_nlp = spacy.load('en_core_web_sm')
+spacy_nlp.remove_pipe("parser")
 
 
 class ParsedText:
@@ -21,14 +22,14 @@ class ParsedText:
         self.sentences = sent_detector.tokenize(text)
         self.paragraphs = self.raw_text.split("\n\n")
 
-    def random_sentence(self, minimum_tokens=1):
+    def random_sentence(self, minimum_tokens=1) -> str:
         num_tokens = 0
         while num_tokens < minimum_tokens:
             sentence = random.choice(self.sentences)
             num_tokens = len([token.text for token in spacy_nlp(sentence)])
         return sentence
 
-    def random_sentences(self, num=5, minimum_tokens=1):
+    def random_sentences(self, num=5, minimum_tokens=1) -> list:
         random_sentences = []
         while len(random_sentences) < num:
             random_sentence = self.random_sentence(minimum_tokens=minimum_tokens)
@@ -36,7 +37,7 @@ class ParsedText:
                 random_sentences.append(random_sentence)
         return random_sentences
 
-    def random_paragraph(self, minimum_sentences=3):
+    def random_paragraph(self, minimum_sentences=3) -> str:
         num_sentences = 0
         while num_sentences < minimum_sentences:
             paragraph = random.choice(self.paragraphs)
@@ -95,36 +96,37 @@ def random_gutenberg_document(language_filter='en') -> str:
     return document
 
 
-def swap_parts_of_speech(text1, text2, parts_of_speech=['ADJ', 'NOUN']):
+def swap_parts_of_speech(text1, text2, parts_of_speech=['ADJ', 'NOUN']) -> (str, str):
     doc1 = spacy_nlp(text1)
     doc2 = spacy_nlp(text2)
+    # First build two dictionaries (one for each text) whose keys are parts of speech and values are lists of words
     doc1_words_keyed_by_pos, doc2_words_keyed_by_pos = defaultdict(lambda: []), defaultdict(lambda: [])
-    text1_word_swaps, text2_word_swaps = {}, {}
     for token in doc1:
-        # Build a dictionary where the key is the part of speech and the value is the list of unique words
         if token.pos_ in parts_of_speech and not token.text in doc1_words_keyed_by_pos[token.pos_]:
-            doc1_words_keyed_by_pos[token.pos_].append(token.text_with_ws)
+            doc1_words_keyed_by_pos[token.pos_].append(token.text)
+    random.shuffle(doc1_words_keyed_by_pos[token.pos_])  # For variety's sake
+    # Also build two dictionaries to store the word swaps we will do at the end. (Token text is immutable in spaCy.)
+    # We can simultaneously build the second text's word-by-part-of-speech dict and its word swap dict
+    text1_word_swaps, text2_word_swaps = {}, {}
     for token in doc2:
         if token.pos_ in parts_of_speech:
             if token.text not in doc2_words_keyed_by_pos[token.pos_]:
-                # Build a dictionary where the key is the part of speech and the value is the list of unique words
-                doc2_words_keyed_by_pos[token.pos_].append(token.text_with_ws)
+                doc2_words_keyed_by_pos[token.pos_].append(token.text)
             try:
-                text2_word_swaps[token.text_with_ws] = doc1_words_keyed_by_pos[token.pos_].pop()
-            except Exception:
-                # There are no more words to substitute
-                # Recopy and keep randomly substituting?
+                #  Use regex to preserve the whitespace of the word-to-be-replaced
+                text2_word_swaps[token.text_with_ws] = \
+                    re.sub('(?<!\S)\S+(?!\S)', doc1_words_keyed_by_pos[token.pos_].pop(), token.text_with_ws)
+            except IndexError:  # There are no more words to substitute; the other text had more words of this p.o.s.
                 pass
+    random.shuffle(doc2_words_keyed_by_pos[token.pos_])
     for token in doc1:
         if token.pos_ in parts_of_speech:
             try:
-                # Replace text2's word with a word with the same part of speech from word1
-                text1_word_swaps[token.text_with_ws] = doc2_words_keyed_by_pos[token.pos_].pop()
-                # token.text_with_ws = doc2_words_keyed_by_pos[token.pos_].pop()
-            except Exception:
-                # There are no more words to substitute
-                # Recopy and keep randomly substituting?
+                text1_word_swaps[token.text_with_ws] = \
+                    re.sub('(?<!\S)\S+(?!\S)', doc2_words_keyed_by_pos[token.pos_].pop(), token.text_with_ws)
+            except IndexError:  # There are no more words to substitute; the other text had more words of this p.o.s.
                 pass
+    # Recompose the text from its whitespace-aware tokens, substituting words if needed.
     text1 = ''.join([text1_word_swaps.get(token.text_with_ws, token.text_with_ws) for token in doc1])
     text2 = ''.join([text2_word_swaps.get(token.text_with_ws, token.text_with_ws) for token in doc2])
     return text1, text2
