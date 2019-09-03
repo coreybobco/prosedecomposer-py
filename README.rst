@@ -19,16 +19,47 @@ I've only implemented that basic sampling right now. Expect more very soon.
 Installation
 ^^^^^^^^^^^^
 
-If you're on Windows, you have to use Docker. OSX and Linux users must install hunspell first. Instructions for that can be found on my generativepoetry module.
+If you're on Windows, you have to use Docker. OSX and Linux users must install hunspell first. Instructions for that can be found on my `generativepoetry <https://github.com/coreybobco/generativepoetry-py/>`_ module.
 
-Sorry for the lackluster instructions. I'm waiting to update this section until after I add Markov chains and some other stuff and publish to PyPi.
-
-Features
-~~~~~~~~
-
-Swap words with the same part of speech between texts: nouns and adjectives, for example
+For Gutenberg sampling to work properly, you must populate the Berkeley db cache:
 
 .. code-block::
-doc1 = ParsedText(random_gutenberg_document())
-doc2 = ParsedText(random_gutenberg_document())
-swap_parts_of_speech(doc1.random_paragraph(), doc2.random_paragraph())
+   python3 populate_cache.py
+
+If the Gutenberg cache messes up after it is populated, delete the cache directory and re-populate.
+
+Usage
+~~~~~~~~
+
+To extract and clean the text from Project Gutenberg or Archive.org:
+
+.. code-block::
+
+    # From an Archive.org URL:
+   calvino_text = get_internet_archive_document('https://archive.org/stream/CalvinoItaloCosmicomics/Calvino-Italo-Cosmicomics_djvu.txt')
+   # From a Project Gutenberg URL:
+   alice_in_wonderland = get_gutenberg_document('https://www.gutenberg.org/ebooks/11')
+   # Select a random document from Project Gutenberg
+   random_gutenberg_text = random_gutenberg_document
+
+The ParsedText class offers some functions for randomly sampling one or more sentences or paragraphs of a certain length:
+
+.. code-block::
+
+   parsed_calvino = ParsedText(calvino_text)
+   parsed_calvino.random_sentence()   # Returns a random sentence
+   parsed_calvino.random_sentence(minimum_tokens=25)  # Returns a random sentence of a guaranteed length in tokens
+   parsed_calvino.random_sentences()  # Returns 5 random sentences
+   parsed_calvino.random_sentences(num=7, minimum_tokens=25)  # Returns 7 random sentences of a guaranteed length
+   parsed_calvino.random_paragraph()  # Returns a random paragraph (of at least 3 sentence by default)
+   parsed_calvino.random_paragraph(minimum_sentences=5)  # Returns a paragraph with at least 5 sentences
+
+To swap words with the same part(s) of speech between texts:
+
+.. code-block::
+
+   #  Swap out adjectives and nouns between two random paragraphs of two random Gutenberg documents
+   doc1 = ParsedText(random_gutenberg_document())
+   doc2 = ParsedText(random_gutenberg_document())
+   swap_parts_of_speech(doc1.random_paragraph(), doc2.random_paragraph())
+
