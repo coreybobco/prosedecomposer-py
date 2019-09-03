@@ -93,3 +93,38 @@ def random_gutenberg_document(language_filter='en') -> str:
         doc_language = next(iter(lang_metadata)) if len(lang_metadata) else False
         document = super_cleaner(strip_headers(load_etext(document_id).strip()), mark_deletions=False)
     return document
+
+
+def swap_parts_of_speech(text1, text2, parts_of_speech=['ADJ', 'NOUN']):
+    doc1 = spacy_nlp(text1)
+    doc2 = spacy_nlp(text2)
+    doc1_words_keyed_by_pos, doc2_words_keyed_by_pos = defaultdict(lambda: []), defaultdict(lambda: [])
+    text1_word_swaps, text2_word_swaps = {}, {}
+    for token in doc1:
+        # Build a dictionary where the key is the part of speech and the value is the list of unique words
+        if token.pos_ in parts_of_speech and not token.text in doc1_words_keyed_by_pos[token.pos_]:
+            doc1_words_keyed_by_pos[token.pos_].append(token.text_with_ws)
+    for token in doc2:
+        if token.pos_ in parts_of_speech:
+            if token.text not in doc2_words_keyed_by_pos[token.pos_]:
+                # Build a dictionary where the key is the part of speech and the value is the list of unique words
+                doc2_words_keyed_by_pos[token.pos_].append(token.text_with_ws)
+            try:
+                text2_word_swaps[token.text_with_ws] = doc1_words_keyed_by_pos[token.pos_].pop()
+            except Exception:
+                # There are no more words to substitute
+                # Recopy and keep randomly substituting?
+                pass
+    for token in doc1:
+        if token.pos_ in parts_of_speech:
+            try:
+                # Replace text2's word with a word with the same part of speech from word1
+                text1_word_swaps[token.text_with_ws] = doc2_words_keyed_by_pos[token.pos_].pop()
+                # token.text_with_ws = doc2_words_keyed_by_pos[token.pos_].pop()
+            except Exception:
+                # There are no more words to substitute
+                # Recopy and keep randomly substituting?
+                pass
+    text1 = ''.join([text1_word_swaps.get(token.text_with_ws, token.text_with_ws) for token in doc1])
+    text2 = ''.join([text2_word_swaps.get(token.text_with_ws, token.text_with_ws) for token in doc2])
+    return text1, text2
