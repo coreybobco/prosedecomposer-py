@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 
 
 sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
-spacy_nlp = spacy.load('en_core_web_sm')
+spacy_nlp = spacy.load('en_core_web_sm', disable=['ner'])
 spacy_nlp.remove_pipe("parser")
 
 

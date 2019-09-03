@@ -124,5 +124,77 @@ class ParsedTextTestCase(unittest.TestCase):
         num_sentences = len(sent_detector.tokenize(random_paragraph))
         self.assertGreaterEqual(num_sentences, 6)
 
+
+class TextProcessingTestCase(unittest.TestCase):
+
+    def test_swap_parts_of_speech(self):
+        great_expectations_sample = ''.join([
+            "It was then I began to understand that everything in the room had stopped, like the watch and the ",
+            "clock, a long time ago. I noticed that Miss Havisham put down the jewel exactly on the spot from which ",
+            "she had taken it up. As Estella dealt the cards, I glanced at the dressing-table again, and saw that the",
+            " shoe upon it, once white, now yellow, had never been worn. I glanced down at the foot from which the ",
+            "shoe was absent, and saw that the silk stocking on it, once white, now yellow, had been trodden ragged. ",
+            "Without this arrest of everything, this standing still of all the pale decayed objects, not even the ",
+            "withered bridal dress on the collapsed form could have looked so like grave-clothes, or the long veil ",
+            "so like a shroud."
+        ])  # a novel by Charles Dickens
+        great_expectations_nouns = ['everything', 'room', 'watch', 'clock', 'time', 'jewel', 'spot', 'cards',
+                                    'dressing', 'table', 'shoe', 'foot', 'silk', 'arrest', 'objects', 'dress', 'form',
+                                    'grave', 'clothes', 'veil', 'shroud']
+        great_expectations_adjectives = ['long', 'white', 'yellow', 'absent', 'pale', 'decayed', 'bridal']
+        spacy_nlp = spacy.load('en_core_web_sm', disable=['ner'])
+        spacy_nlp.remove_pipe("parser")
+        tokenized_ge_sample = spacy_nlp(great_expectations_sample)
+        great_expectations_pos_by_word_number = {}
+        for i,token in enumerate(tokenized_ge_sample):
+            if token.pos_ in ['ADJ', 'NOUN']:
+                great_expectations_pos_by_word_number[i] = token.pos_
+        shunned_house_sample = ''.join([
+            "Yet after all, the sight was worse than I had dreaded. There are horrors beyond horrors, and this was one",
+            "of those nuclei of all dreamable hideousness which the cosmos saves to blast an accursed and unhappy few.",
+            "Out of the fungus-ridden earth steamed up a vaporous corpse-light, yellow and diseased, which bubbled and",
+            " lapped to a gigantic height in vague outlines half human and half monstrous, through which I could see ",
+            "the chimney and fireplace beyond. It was all eyes—wolfish and mocking—and the rugose insectoid head ",
+            "dissolved at the top to a thin stream of mist which curled putridly about and finally vanished up the ",
+            "chimney. I say that I saw this thing, but it is only in conscious retrospection that I ever definitely ",
+            "traced its damnable approach to form. At the time, it was to me only a seething, dimly phosphorescent ",
+            "cloud of fungous loathsomeness, enveloping and dissolving to an abhorrent plasticity the one object on ",
+            "which all my attention was focussed."
+        ])  # a story by H.P. Lovecraft
+        tokenized_shunned_house_sample = spacy_nlp(great_expectations_sample)
+        shunned_house_pos_by_word_number = {}
+        for i, token in enumerate(tokenized_shunned_house_sample):
+            if token.pos_ in ['ADJ', 'NOUN']:
+                shunned_house_pos_by_word_number[i] = token.pos_
+        shunned_house_nouns = ['sight', 'horrors', 'nuclei', 'hideousness', 'cosmos', 'fungus', 'earth', 'corpse',
+                               'height', 'outlines', 'half', 'chimney', 'fireplace', 'eyes', 'wolfish', 'mocking',
+                               'head', 'top', 'stream', 'mist', 'thing', 'retrospection', 'approach', 'time',
+                               'cloud', 'loathsomeness', 'enveloping', 'dissolving', 'abhorrent', 'plasticity',
+                               'object', 'attention']
+        shunned_house_adjectives = ['worse', 'dreamable', 'accursed', 'unhappy', 'few', 'vaporous', 'light', 'yellow',
+                                    'diseased', 'gigantic', 'vague', 'human', 'monstrous', 'rugose', 'insectoid',
+                                    'thin', 'conscious', 'damnable', 'seething', 'phosphorescent', 'fungous']
+        shunned_house_pos_by_word_number = {}
+        # Just test swapping nouns and adjectives for now
+        new_ge_sample, new_sh_sample = swap_parts_of_speech(great_expectations_sample, shunned_house_sample)
+        new_ge_doc, new_sh_doc = spacy_nlp(new_ge_sample), spacy_nlp(new_ge_sample)
+        # Since the Dickens sample has fewer nouns and adjectives, all the Dickens nounsa and adjectives
+        # should be replaced by Lovecraft's words
+        for i, token in enumerate(new_ge_doc):
+            expected_pos = great_expectations_pos_by_word_number.get(i, None)
+            if expected_pos is 'NOUN':
+                self.assertTrue(token.text in shunned_house_nouns)
+            elif token.pos is 'ADJ':
+                self.assertTrue(token.text in shunned_house_adjectives)
+        for i, token in enumerate(new_sh_doc):
+            expected_pos = shunned_house_pos_by_word_number.get(i, None)
+            if expected_pos is 'NOUN':
+                # Since there are only 7 adjectives in the Dickens passage only that many substitutions can occur.
+                self.assertTrue(token.text in great_expectations_adjectives or i > 6)
+            elif token.pos is 'ADJ':
+                # Since there are only 21 nouns in the Dickens passage only that many substitutions can occur.
+                self.assertTrue(token.text in great_expectations_nouns or i > 20)
+
+
 if __name__ == '__main__':
     unittest.main()
