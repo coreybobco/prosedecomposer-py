@@ -1,4 +1,5 @@
 import random, re
+from collections import defaultdict
 from gutenberg.acquire import load_etext
 from gutenberg.query import get_metadata
 from gutenberg.cleanup import strip_headers
@@ -62,7 +63,11 @@ def get_internet_archive_document(url) -> str:
     try:
         response = download(document_id, glob_pattern="*txt", return_responses=True)[0]
         # Remove single newlines, preserve double  newlines (because they demarcate paragraphs
-        return re.sub('(?<![\r\n])(\r?\n|\n?\r)(?![\r\n])', ' ', response.text.strip())
+        text = re.sub('(?<![\r\n])(\r?\n|\n?\r)(?![\r\n])', ' ', response.text.strip())
+        # This usually creates double spaces between lines because most lines end with single spaces, but to account
+        # for cases in which lines end without spaces, we will handle this in two lines
+        return re.sub('(?<=[\S])(\s\s)(?=[\S])', ' ', text)
+
     except Exception:
         raise Exception(f'Archive.org download failed for url: {url}')
 
