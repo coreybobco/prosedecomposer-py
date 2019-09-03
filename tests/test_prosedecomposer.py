@@ -1,5 +1,6 @@
 import unittest
 from prosedecomposer import *
+import inflect
 import spacy
 
 spacy_nlp = spacy.load('en_core_web_sm')
@@ -127,6 +128,28 @@ class ParsedTextTestCase(unittest.TestCase):
 
 class TextProcessingTestCase(unittest.TestCase):
 
+    def test_reconcile_replacement_word(self):
+        # No changes expected to the replacement word in these two cases
+        self.assertEqual(reconcile_replacement_word('cat', 'NN', 'dog', 'NN'), 'dog')
+        self.assertEqual(reconcile_replacement_word('cats', 'NNS', 'dogs', 'NNS'), 'dogs')
+        # Just whitespace changes when both the original word and the replacement are singular or both are plural
+        self.assertEqual(reconcile_replacement_word(' shark', 'NN', 'crow', 'NN'), ' crow')
+        self.assertEqual(reconcile_replacement_word('street ', 'NN', 'shark', 'NN'), 'shark ')
+        self.assertEqual(reconcile_replacement_word(' bicycle ', 'NN', 'lemur', 'NN'), ' lemur ')
+        self.assertEqual(reconcile_replacement_word(' sharks', 'NNS', 'crows', 'NNS'), ' crows')
+        self.assertEqual(reconcile_replacement_word('streets ', 'NNS', 'sharks', 'NNS'), 'sharks ')
+        self.assertEqual(reconcile_replacement_word(' bicycles ', 'NNS', 'lemurs', 'NNS'), ' lemurs ')
+        # Pluralize the replacement noun in these cases
+        self.assertEqual(reconcile_replacement_word('cats', 'NNS', 'dog', 'NN'), 'dogs')
+        self.assertEqual(reconcile_replacement_word(' sharks', 'NNS', 'crow', 'NN'), ' crows')
+        self.assertEqual(reconcile_replacement_word('streets ', 'NNS', 'shark', 'NN'), 'sharks ')
+        self.assertEqual(reconcile_replacement_word(' bicycles ', 'NNS', 'lemur', 'NN'), ' lemurs ')
+        # Singularize the replacement word in these cases
+        self.assertEqual(reconcile_replacement_word('cat', 'NN', 'dogs', 'NNS'), 'dog')
+        self.assertEqual(reconcile_replacement_word(' shark', 'NN', 'crows', 'NNS'), ' crow')
+        self.assertEqual(reconcile_replacement_word('street ', 'NN', 'sharks', 'NNS'), 'shark ')
+        self.assertEqual(reconcile_replacement_word(' bicycle ', 'NN', 'lemurs', 'NNS'), ' lemur ')
+
     def test_swap_parts_of_speech(self):
         great_expectations_sample = ''.join([
             "It was then I began to understand that everything in the room had stopped, like the watch and the ",
@@ -151,15 +174,15 @@ class TextProcessingTestCase(unittest.TestCase):
                 great_expectations_pos_by_word_number[i] = token.pos_
         shunned_house_sample = ''.join([
             "Yet after all, the sight was worse than I had dreaded. There are horrors beyond horrors, and this was one",
-            "of those nuclei of all dreamable hideousness which the cosmos saves to blast an accursed and unhappy few.",
-            "Out of the fungus-ridden earth steamed up a vaporous corpse-light, yellow and diseased, which bubbled and",
-            " lapped to a gigantic height in vague outlines half human and half monstrous, through which I could see ",
-            "the chimney and fireplace beyond. It was all eyes—wolfish and mocking—and the rugose insectoid head ",
-            "dissolved at the top to a thin stream of mist which curled putridly about and finally vanished up the ",
-            "chimney. I say that I saw this thing, but it is only in conscious retrospection that I ever definitely ",
-            "traced its damnable approach to form. At the time, it was to me only a seething, dimly phosphorescent ",
-            "cloud of fungous loathsomeness, enveloping and dissolving to an abhorrent plasticity the one object on ",
-            "which all my attention was focussed."
+            " of those nuclei of all dreamable hideousness which the cosmos saves to blast an accursed and unhappy ",
+            "few. Out of the fungus-ridden earth steamed up a vaporous corpse-light, yellow and diseased, which ",
+            "bubbled and lapped to a gigantic height in vague outlines half human and half monstrous, through which I ",
+            "could see the chimney and fireplace beyond. It was all eyes—wolfish and mocking—and the rugose insectoid ",
+            "head dissolved at the top to a thin stream of mist which curled putridly about and finally vanished up ",
+            "the chimney. I say that I saw this thing, but it is only in conscious retrospection that I ever ",
+            "definitely traced its damnable approach to form. At the time, it was to me only a seething, dimly ",
+            "phosphorescent cloud of fungous loathsomeness, enveloping and dissolving to an abhorrent plasticity the ",
+            "one object on which all my attention was focused."
         ])  # a story by H.P. Lovecraft
         tokenized_shunned_house_sample = spacy_nlp(great_expectations_sample)
         shunned_house_pos_by_word_number = {}
@@ -177,23 +200,29 @@ class TextProcessingTestCase(unittest.TestCase):
         shunned_house_pos_by_word_number = {}
         # Just test swapping nouns and adjectives for now
         new_ge_sample, new_sh_sample = swap_parts_of_speech(great_expectations_sample, shunned_house_sample)
+        print("\n\n".join([new_ge_sample, new_sh_sample]))
         new_ge_doc, new_sh_doc = spacy_nlp(new_ge_sample), spacy_nlp(new_ge_sample)
         # Since the Dickens sample has fewer nouns and adjectives, all the Dickens nounsa and adjectives
         # should be replaced by Lovecraft's words
+        inflector = inflect.engine()
         for i, token in enumerate(new_ge_doc):
             expected_pos = great_expectations_pos_by_word_number.get(i, None)
             if expected_pos is 'NOUN':
-                self.assertTrue(token.text in shunned_house_nouns)
+                # Note: inflector.plural returns the singularized noun if the noun is already plural
+                self.assertTrue(token.text in shunned_house_nouns or inflector.plural(token.text) in
+                                shunned_house_nouns)
             elif token.pos is 'ADJ':
                 self.assertTrue(token.text in shunned_house_adjectives)
         for i, token in enumerate(new_sh_doc):
             expected_pos = shunned_house_pos_by_word_number.get(i, None)
-            if expected_pos is 'NOUN':
+            if expected_pos is 'ADJ':
                 # Since there are only 7 adjectives in the Dickens passage only that many substitutions can occur.
                 self.assertTrue(token.text in great_expectations_adjectives or i > 6)
-            elif token.pos is 'ADJ':
+            elif token.pos is 'NOUN':
                 # Since there are only 21 nouns in the Dickens passage only that many substitutions can occur.
-                self.assertTrue(token.text in great_expectations_nouns or i > 20)
+                # Note: inflector.plural returns the singularized noun if the noun is already plural
+                self.assertTrue((token.text in great_expectations_nouns or inflector.plural(token.text)
+                                 in great_expectations_nouns) or i > 20)
 
 
 if __name__ == '__main__':

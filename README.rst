@@ -58,8 +58,11 @@ To swap words with the same part(s) of speech between texts:
 
 .. code-block::
 
-   #  Swap out adjectives and nouns between two random paragraphs of two random Gutenberg documents
+   # Swap out adjectives and nouns between two random paragraphs of two random Gutenberg documents
    doc1 = ParsedText(random_gutenberg_document())
    doc2 = ParsedText(random_gutenberg_document())
    swap_parts_of_speech(doc1.random_paragraph(), doc2.random_paragraph())
+   # Any of Spacy's part of speech tag values should work, though: https://spacy.io/api/annotation#pos-tagging
+   swap_parts_of_speech(doc1.random_paragraph(), doc2.random_paragraph(), parts_of_speech=["VERB", "CONJ"])
+   # Since NLG has not yet been implemented, expect syntax errors like subject-verb agreement.
 

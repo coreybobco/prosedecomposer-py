@@ -5,6 +5,7 @@ from gutenberg.query import get_metadata
 from gutenberg.cleanup import strip_headers
 from gutenberg_cleaner import super_cleaner
 from internetarchive import download
+import inflect
 import nltk
 import spacy
 from urllib.parse import urlsplit
@@ -13,7 +14,7 @@ from urllib.parse import urlsplit
 sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 spacy_nlp = spacy.load('en_core_web_sm', disable=['ner'])
 spacy_nlp.remove_pipe("parser")
-
+inflector = inflect.engine()
 
 class ParsedText:
 
@@ -46,6 +47,11 @@ class ParsedText:
 
 
 def validate_url(url, expected_netloc=''):
+    """Validate that the provided string is indeed a URL from the anticipated source
+
+     Keyword arguments:
+        expected_netloc (str) -- the expected site the URL should be from, i.e. archive.org or gutenberg.org
+    """
     url_parts = urlsplit(url)
     if not url_parts.netloc or (expected_netloc and expected_netloc not in url_parts.netloc):
         raise Exception(f'Not a valid f{expected_netloc} document url')
@@ -53,8 +59,8 @@ def validate_url(url, expected_netloc=''):
 
 def get_internet_archive_document(url) -> str:
     """Downloads a document (book, etc.) from Internet Archive and returns it as a string. The linked document must
-       have a text version. PDF text extraction is not supported at this time"""
-
+       have a text version. PDF text extraction is not supported at this time.
+    """
     validate_url(url, expected_netloc='archive.org')
     url_parts = urlsplit(url).path.split("/")
     if len(url_parts) > 2:
@@ -85,6 +91,11 @@ def get_gutenberg_document(url) -> str:
 
 
 def random_gutenberg_document(language_filter='en') -> str:
+    """Downloads a random document (book, etc.) from Project Gutenberg and returns it as a stirng.
+
+    Keyword arguments:
+        language_filter (str) -- restrict the random document to a paritcular language (default: English)
+    """
     doc_language = None
     document = ''
     while (not doc_language or language_filter) and doc_language != language_filter and len(document) == 0:
@@ -96,34 +107,59 @@ def random_gutenberg_document(language_filter='en') -> str:
     return document
 
 
+def reconcile_replacement_word(original_word_with_ws, original_word_tag, replacement_word, replacement_word_tag) -> str:
+    """Modify replacement word if needed to fix subject/verb agreement and preserve the whitespace or lack of before
+    and after the original word.
+    """
+    # Pluralize or singularize the replacement word if we're dealing with nouns and one's plural and one's singular.
+    if original_word_tag == 'NNS' and replacement_word_tag == 'NN':
+        replacement_word = inflector.plural(replacement_word)
+    elif original_word_tag == 'NN' and replacement_word_tag == 'NNS':
+        replacement_word = inflector.singular_noun(replacement_word) \
+            if inflector.singular_noun(replacement_word) else replacement_word
+    #  Use regex to preserve the whitespace of the word-to-be-replaced
+    replacement_word = re.sub('(?<!\S)\S+(?!\S)', replacement_word, original_word_with_ws)
+    return replacement_word
+
 def swap_parts_of_speech(text1, text2, parts_of_speech=['ADJ', 'NOUN']) -> (str, str):
+    """Swap all the words of certain parts of speech from one text with those (with the same part of speech) from
+    another text.
+
+    Keyword arguments:
+        parts_of_speech (list) -- list of parts of speech tags to swap out. Must be from the list provided by spaCy:
+                                  https://spacy.io/api/annotation#pos-tagging
+    """
     doc1 = spacy_nlp(text1)
     doc2 = spacy_nlp(text2)
     # First build two dictionaries (one for each text) whose keys are parts of speech and values are lists of words
     doc1_words_keyed_by_pos, doc2_words_keyed_by_pos = defaultdict(lambda: []), defaultdict(lambda: [])
     for token in doc1:
         if token.pos_ in parts_of_speech and not token.text in doc1_words_keyed_by_pos[token.pos_]:
-            doc1_words_keyed_by_pos[token.pos_].append(token.text)
-    random.shuffle(doc1_words_keyed_by_pos[token.pos_])  # For variety's sake
+            doc1_words_keyed_by_pos[token.pos_].append((token.text, token.tag_))
+    for pos in parts_of_speech:
+        random.shuffle(doc1_words_keyed_by_pos[pos])  # For variety's sake
     # Also build two dictionaries to store the word swaps we will do at the end. (Token text is immutable in spaCy.)
     # We can simultaneously build the second text's word-by-part-of-speech dict and its word swap dict
     text1_word_swaps, text2_word_swaps = {}, {}
     for token in doc2:
         if token.pos_ in parts_of_speech:
-            if token.text not in doc2_words_keyed_by_pos[token.pos_]:
-                doc2_words_keyed_by_pos[token.pos_].append(token.text)
+            doc2_words_keyed_by_pos[token.pos_].append((token.text, token.tag_))
             try:
-                #  Use regex to preserve the whitespace of the word-to-be-replaced
-                text2_word_swaps[token.text_with_ws] = \
-                    re.sub('(?<!\S)\S+(?!\S)', doc1_words_keyed_by_pos[token.pos_].pop(), token.text_with_ws)
+                replacement_word, replacement_word_tag = doc1_words_keyed_by_pos[token.pos_].pop()
+                replacement_word = reconcile_replacement_word(token.text_with_ws, token.tag_, replacement_word,
+                                                              replacement_word_tag)
+                text2_word_swaps[token.text_with_ws] = replacement_word
             except IndexError:  # There are no more words to substitute; the other text had more words of this p.o.s.
                 pass
-    random.shuffle(doc2_words_keyed_by_pos[token.pos_])
+    for pos in parts_of_speech:
+        random.shuffle(doc2_words_keyed_by_pos[pos])
     for token in doc1:
         if token.pos_ in parts_of_speech:
             try:
-                text1_word_swaps[token.text_with_ws] = \
-                    re.sub('(?<!\S)\S+(?!\S)', doc2_words_keyed_by_pos[token.pos_].pop(), token.text_with_ws)
+                replacement_word, replacement_word_tag = doc2_words_keyed_by_pos[token.pos_].pop()
+                replacement_word = reconcile_replacement_word(token.text_with_ws, token.tag_, replacement_word,
+                                                              replacement_word_tag)
+                text1_word_swaps[token.text_with_ws] = replacement_word
             except IndexError:  # There are no more words to substitute; the other text had more words of this p.o.s.
                 pass
     # Recompose the text from its whitespace-aware tokens, substituting words if needed.
