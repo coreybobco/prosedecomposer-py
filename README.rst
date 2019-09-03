@@ -23,3 +23,12 @@ If you're on Windows, you have to use Docker. OSX and Linux users must install h
 
 Sorry for the lackluster instructions. I'm waiting to update this section until after I add Markov chains and some other stuff and publish to PyPi.
 
+Features
+~~~~~~~~
+
+Swap words with the same part of speech between texts: nouns and adjectives, for example
+
+.. code-block::
+doc1 = ParsedText(random_gutenberg_document())
+doc2 = ParsedText(random_gutenberg_document())
+swap_parts_of_speech(doc1.random_paragraph(), doc2.random_paragraph())
