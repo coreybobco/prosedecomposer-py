@@ -202,7 +202,10 @@ class TextProcessingTestCase(unittest.TestCase):
         shunned_house_pos_by_word_number = {}
         # Just test swapping nouns and adjectives for now
         new_ge_sample, new_sh_sample = swap_parts_of_speech(great_expectations_sample, shunned_house_sample)
-        print("\n\n".join([new_ge_sample, new_sh_sample]))
+        print("\nAdjectives and Verbs Taken From Lovecraft And Swapped into Great Expectations:")
+        print(new_ge_sample)
+        print("Adjectives and Verbs Taken From Great Expectations And Swapped into Great Lovecraft:")
+        print(new_sh_sample)
         new_ge_doc, new_sh_doc = spacy_nlp(new_ge_sample), spacy_nlp(new_ge_sample)
         # Since the Dickens sample has fewer nouns and adjectives, all the Dickens nounsa and adjectives
         # should be replaced by Lovecraft's words
@@ -221,7 +224,6 @@ class TextProcessingTestCase(unittest.TestCase):
                 self.assertTrue(token.text in great_expectations_adjectives or i > 6)
             elif token.pos is 'NOUN':
                 # Since there are only 21 nouns in the Dickens passage only that many substitutions can occur.
-                # Note: inflector.plural returns the singularized noun if the noun is already plural
                 self.assertTrue((token.text in great_expectations_nouns or inflector.plural(token.text)
                                  in great_expectations_nouns or inflector.singular_noun(token.text)
                                  in great_expectations_nouns) or i > 20)
@@ -235,17 +237,26 @@ class TextProcessingTestCase(unittest.TestCase):
         file = open('tests/Cosmicomics.txt', 'r')
         cosmicomics = file.read()
         file.close()
-        output = markov(cosmicomics)
-        # Sentence tokenization for Markov chains is kinda screwed up because they're nonsense
-        # self.assertEqual(len(sent_detector.tokenize(output)), 5)
-        output = markov(cosmicomics, num_output_sentences=3)
-        # self.assertEqual(len(sent_detector.tokenize(output)), 3)
+        # Sentence tokenization for Markov chains is kinda screwed up because they're nonsense so just verify we have
+        # the right number of sentences without NLP
+        output_sentences = markov(cosmicomics)
+        print("\nMarkov generated text (n-gram size = 1) from entirety of 'Cosmicomics' by Italo Calvino:\n" +
+              " ".join(output_sentences) + "\n")
+        self.assertEqual(len(output_sentences), 5)
+        output_sentences = markov(cosmicomics, ngram_size=2, num_output_sentences=3)
+        print("\nMarkov generated text (n-gram size = 2) from entirety of 'Cosmicomics' by Italo Calvino:\n" +
+              " ".join(output_sentences) + "\n")
+        self.assertEqual(len(output_sentences), 3)
         file = open('tests/AliceinWonderland.txt', 'r')
         alice_in_wonderland = file.read()
-        output = markov([alice_in_wonderland, cosmicomics])
-        # self.assertEqual(len(sent_detector.tokenize(output)), 5)
-        output = markov([alice_in_wonderland, cosmicomics], num_output_sentences=3)
-        # self.assertEqual(len(sent_detector.tokenize(output)), 3)
+        output_sentences = markov([alice_in_wonderland, cosmicomics])
+        print("\nMarkov generated text (n-gram size = 1) from entirety of 'Cosmicomics'  &  'Alice in Wonderland':\n" +
+              " ".join(output_sentences) + "\n")
+        self.assertEqual(len(output_sentences), 5)
+        output_sentences = markov([alice_in_wonderland, cosmicomics], ngram_size=2, num_output_sentences=3)
+        print("\nMarkov generated text (n-gram size = 2) from entirety of 'Cosmicomics'  &  'Alice in Wonderland':\n" +
+              " ".join(output_sentences) + "\n")
+        self.assertEqual(len(output_sentences), 3)
 
 
 if __name__ == '__main__':
