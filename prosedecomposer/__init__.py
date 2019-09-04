@@ -1,15 +1,16 @@
 import random
 import re
 from collections import defaultdict
+from typing import List, TypeVar
+import inflect
+import markovify
+import nltk
+import spacy
 from gutenberg.acquire import load_etext
 from gutenberg.query import get_metadata
 from gutenberg.cleanup import strip_headers
 from gutenberg_cleaner import super_cleaner
 from internetarchive import download
-import inflect
-import markovify
-import nltk
-import spacy
 from urllib.parse import urlsplit
 
 
@@ -17,6 +18,8 @@ sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 spacy_nlp = spacy.load('en_core_web_sm', disable=['ner'])
 spacy_nlp.remove_pipe("parser")
 inflector = inflect.engine()
+input_type = TypeVar('input_type', str, List[str])  # Must be str or bytes
+
 
 class ParsedText:
 
@@ -171,13 +174,11 @@ def swap_parts_of_speech(text1, text2, parts_of_speech=['ADJ', 'NOUN']) -> (str,
     return text1, text2
 
 
-def markov(input, ngram_size=1, num_output_sentences=5) -> str:
+def markov(input: input_type, ngram_size=1, num_output_sentences=5) -> List[str]:
     if type(input) == list:
         list_of_texts = input
     elif type(input) == str:
         list_of_texts = [input]
-    else:
-        raise Exception('This function requires a string or a list of strings as its argument')
     markov_models = []
     for text in list_of_texts:
         markov_models.append(markovify.Text(text, state_size=ngram_size))
@@ -189,3 +190,27 @@ def markov(input, ngram_size=1, num_output_sentences=5) -> str:
         if isinstance(sentence, str):
             output_sentences.append(sentence)
     return output_sentences
+
+
+def cutup(input, min_cutout_words=3, max_cutout_words=7) -> List[str]:
+    """Simulates William S. Burroughs' and Brion Gysin's cut-up technique by separating an input text into
+    non-whitespace blocks of text and then randomly grouping those into cut-outs between the minimum and maximum
+    length of words.
+    """
+    if type(input) == list:
+        list_of_texts = input
+    elif type(input) == str:
+        list_of_texts = [input]
+    # We don't need tokenization for this since physically cutting up text out of books always cuts where whitespace
+    # exists--it does not separate words from punctuation as punctuation does. (Also this way is faster.)
+    cutouts = []
+    for text in list_of_texts:
+        word_list = text.split(" ")
+        current_position, next_position = 0, 0
+        while next_position < len(word_list):
+            cutout_word_count = random.randint(min_cutout_words, max_cutout_words)
+            next_position = current_position + cutout_word_count
+            cutouts.append(" ".join(word_list[current_position:next_position]))
+            current_position = next_position
+    random.shuffle(cutouts)
+    return cutouts

@@ -83,6 +83,7 @@ class ParsedTextTestCase(unittest.TestCase):
         self.assertEqual(len(doc.paragraphs), 801)
         file = open('tests/Cosmicomics.txt', 'r')
         doc = ParsedText(file.read())
+        file.close()
         self.assertEqual(len(doc.sentences), 2146)
         self.assertEqual(len(doc.paragraphs), 776)
 
@@ -240,24 +241,62 @@ class TextProcessingTestCase(unittest.TestCase):
         # Sentence tokenization for Markov chains is kinda screwed up because they're nonsense so just verify we have
         # the right number of sentences without NLP
         output_sentences = markov(cosmicomics)
-        print("\nMarkov generated text (n-gram size = 1) from entirety of 'Cosmicomics' by Italo Calvino:\n" +
+        print("\n\nMarkov generated text (n-gram size = 1) from entirety of 'Cosmicomics' by Italo Calvino:\n" +
               " ".join(output_sentences) + "\n")
         self.assertEqual(len(output_sentences), 5)
         output_sentences = markov(cosmicomics, ngram_size=2, num_output_sentences=3)
-        print("\nMarkov generated text (n-gram size = 2) from entirety of 'Cosmicomics' by Italo Calvino:\n" +
+        print("Markov generated text (n-gram size = 2) from entirety of 'Cosmicomics' by Italo Calvino:\n" +
               " ".join(output_sentences) + "\n")
         self.assertEqual(len(output_sentences), 3)
         file = open('tests/AliceinWonderland.txt', 'r')
         alice_in_wonderland = file.read()
         output_sentences = markov([alice_in_wonderland, cosmicomics])
-        print("\nMarkov generated text (n-gram size = 1) from entirety of 'Cosmicomics'  &  'Alice in Wonderland':\n" +
+        print("Markov generated text (n-gram size = 1) from entirety of 'Cosmicomics'  &  'Alice in Wonderland':\n" +
               " ".join(output_sentences) + "\n")
         self.assertEqual(len(output_sentences), 5)
         output_sentences = markov([alice_in_wonderland, cosmicomics], ngram_size=2, num_output_sentences=3)
-        print("\nMarkov generated text (n-gram size = 2) from entirety of 'Cosmicomics'  &  'Alice in Wonderland':\n" +
+        print("Markov generated text (n-gram size = 2) from entirety of 'Cosmicomics'  &  'Alice in Wonderland':\n" +
               " ".join(output_sentences) + "\n")
         self.assertEqual(len(output_sentences), 3)
 
+    def test_cutup(self):
+        burroughs_sample1 = "".join([
+            "At a surrealist rally in the 1920's Tristan Tzara the man from nowhere proposed to create a poem on the ",
+            "spot by pulling words out of a hat. A riot ensued wrecked the theatre. Andre Breton expelled Tristan ",
+            "Tzara from the movement and grounded the cut ups on the Freudian couch."
+        ])  # Source: https://www.writing.upenn.edu/~afilreis/88v/burroughs-cutup.html
+        cutouts = cutup(burroughs_sample1)
+        print("\n\nWilliam S. Burroughs Computer Cut-Up #1:\n" + " ".join(cutouts))
+        for cutout in cutouts:
+            print(cutout + str(len(cutout.split())))
+            # Cutout should be between the assumed min and max lengths unless it was cut out sequentially last from
+            # the end of the book. This is true for all loops in this test.s
+            self.assertTrue(3 <= len(cutout.split()) <= 7 or cutout.split()[-1] == burroughs_sample1.split()[-1])
+            self.assertIn(cutout, burroughs_sample1)
+        cutouts = cutup(burroughs_sample1, min_cutout_words=2, max_cutout_words=10)
+        print("\nnWilliam S. Burroughs Computer Cut-Up #2:\n" + " ".join(cutouts))
+        for cutout in cutouts:
+            self.assertTrue(2 <= len(cutout.split()) <= 10 or cutout.split()[-1] == burroughs_sample1.split()[-1])
+            self.assertIn(cutout, burroughs_sample1)
+        burroughs_sample2 = "".join([
+            "All writing is in fact cut ups. A collage of words read heard overhead. What else? Use of scissors ",
+            "renders the process explicit and subject to extension and variation. Clear classical prose can be ",
+            "composed entirely of rearranged cut ups. Cutting and rearranging a page of written words introduces ",
+            "a new dimension into writing enabling the writer to turn images in cineramic variation."
+        ])
+        cutouts = cutup([burroughs_sample1, burroughs_sample2])
+        print("\nWilliam S. Burroughs Computer Cut-Up #3:\n" + " ".join(cutouts))
+        for cutout in cutouts:
+            print(cutout)
+            self.assertTrue(3 <= len(cutout.split()) <= 7 or cutout.split()[-1] == burroughs_sample1.split()[-1] or
+                            cutout == burroughs_sample2.split()[-1])
+            self.assertTrue(cutout in burroughs_sample1 or cutout in burroughs_sample2)
+        cutouts = cutup([burroughs_sample1, burroughs_sample2], min_cutout_words=2, max_cutout_words=10)
+        print("\nWilliam S. Burroughs Computer Cut-Up #3:\n" + " ".join(cutouts))
+        for cutout in cutouts:
+            self.assertTrue(2 <= len(cutout.split()) <= 10 or cutout.split()[-1] == burroughs_sample1.split()[-1] or
+                            cutout == burroughs_sample2.split()[-1])
+            self.assertTrue(cutout in burroughs_sample1 or cutout in burroughs_sample2)
 
 if __name__ == '__main__':
     unittest.main()
