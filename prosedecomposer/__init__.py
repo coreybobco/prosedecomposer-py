@@ -1,4 +1,5 @@
-import random, re
+import random
+import re
 from collections import defaultdict
 from gutenberg.acquire import load_etext
 from gutenberg.query import get_metadata
@@ -6,6 +7,7 @@ from gutenberg.cleanup import strip_headers
 from gutenberg_cleaner import super_cleaner
 from internetarchive import download
 import inflect
+import markovify
 import nltk
 import spacy
 from urllib.parse import urlsplit
@@ -121,6 +123,7 @@ def reconcile_replacement_word(original_word_with_ws, original_word_tag, replace
     replacement_word = re.sub('(?<!\S)\S+(?!\S)', replacement_word, original_word_with_ws)
     return replacement_word
 
+
 def swap_parts_of_speech(text1, text2, parts_of_speech=['ADJ', 'NOUN']) -> (str, str):
     """Swap all the words of certain parts of speech from one text with those (with the same part of speech) from
     another text.
@@ -166,3 +169,23 @@ def swap_parts_of_speech(text1, text2, parts_of_speech=['ADJ', 'NOUN']) -> (str,
     text1 = ''.join([text1_word_swaps.get(token.text_with_ws, token.text_with_ws) for token in doc1])
     text2 = ''.join([text2_word_swaps.get(token.text_with_ws, token.text_with_ws) for token in doc2])
     return text1, text2
+
+
+def markov(input, ngram_size=1, num_output_sentences=5) -> str:
+    if type(input) == list:
+        list_of_texts = input
+    elif type(input) == str:
+        list_of_texts = [input]
+    else:
+        raise Exception('This function requires a string or a list of strings as its argument')
+    markov_models = []
+    for text in list_of_texts:
+        markov_models.append(markovify.Text(text, state_size=ngram_size))
+    textgen = markovify.combine(markov_models)
+    sentence_count = 0
+    output_sentences = []
+    while len(output_sentences) < num_output_sentences:
+        sentence = textgen.make_sentence()
+        if isinstance(sentence, str):
+            output_sentences.append(sentence)
+    return " ".join(output_sentences)
