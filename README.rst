@@ -17,17 +17,19 @@ But what does this do?
 This project elaborates on these ideas, allowing the user to:
 
 - sample random sentences and paragraphs from publicly available works of literature on **Project Gutenberg** and **Archive.org** or any text you give it.
-- swap words that share the same part of speech between two texts--for instance, swapping all of one text's adjectives with another's and one text's nouns with another's, preserving the structure of a narrative or discursive formation while wildly changing the content.
+- swap words that share the same part of speech between two texts--for instance, swapping all of one text's adjectives with another's and one text's nouns with another's, preserving the structure of a narrative or discursive formation while wildly changing the content. Take, for example, this passage from Charles Dickens' *Great Expectations*, which transforms into surrealist horror when you replace the nouns and adjectives with those from a paragraph in H.P. Lovecraft's story *The Shunned House*:
 
-    Take, for example, this passage from Charles Dickens' *Great Expectations*, which transforms into surrealist horror when you replace the nouns and adjectives with those from a paragraph in H.P. Lovecraft's story *The Shunned House*:
-
-        "It was then I began to understand that chimney in the eye had stopped, like the enveloping and the head, a human fungus ago. I noticed that Miss Havisham put down the height exactly on the time from which she had taken it up. As Estella dealt the streams, I glanced at the corpse-abhorrent again, and saw that the outline upon it, once few, now diseased, had never been worn. I glanced down at the sight from which the outline was insectoid, and saw that the half stocking on it, once few, now diseased, had been trodden ragged. Without this cosmos of thing, this standing still of all the worse monstrous attentions, not even the withered phosphorescent mist on the collapsed dissolving could have looked so like horror-mockings, or the human hideousness so like a horror."
+    "It was then I began to understand that chimney in the eye had stopped, like the enveloping and the head, a human fungus ago. I noticed that Miss Havisham put down the height exactly on the time from which she had taken it up. As Estella dealt the streams, I glanced at the corpse-abhorrent again, and saw that the outline upon it, once few, now diseased, had never been worn. I glanced down at the sight from which the outline was insectoid, and saw that the half stocking on it, once few, now diseased, had been trodden ragged. Without this cosmos of thing, this standing still of all the worse monstrous attentions, not even the withered phosphorescent mist on the collapsed dissolving could have looked so like horror-mockings, or the human hideousness so like a horror."
 - run individual texts or list of texts through a Markov chain, semi-intelligently recombining the words in a more or less chaotic manner depending on n-gram size (which defaults to 1, the most chaotic).
+
+     Markov chain based generative algorithms like this one can create prose whose repetitions and permutations lend it a strange rhythm and which appears syntactically and semantically valid at first but eventually turns into nonsense. The Markov chain's formulaic yet sassy and subversive sstyle is quite similar Gertrude Stein's in `The Making Of Americans <gutenberg.net.au/ebooks16/1600671h.html>`_, which she explains in details in the essay `Composition as Explanation <https://www.poetryfoundation.org/articles/69481/composition-as-explanation>`_.
 
 Installation
 ^^^^^^^^^^^^
 
-If you're on Windows, you have to use Docker. OSX and Linux users must install hunspell first. Instructions for that can be found on my `generativepoetry <https://github.com/coreybobco/generativepoetry-py/>`_ module.
+If you're on Windows, you have to use Docker.
+
+OSX and Linux users must install hunspell first. Instructions for that can be found on my `generativepoetry <https://github.com/coreybobco/generativepoetry-py/>`_ module.
 
 For Gutenberg sampling to work properly, you must populate the Berkeley db cache:
 
@@ -36,8 +38,9 @@ For Gutenberg sampling to work properly, you must populate the Berkeley db cache
 
 If the Gutenberg cache messes up after it is populated, delete the cache directory and re-populate.
 
-Usage
-~~~~~~~~
+How to Use
+^^^^^^^^^^
+
 First, import the library:
 
 .. code-block::
@@ -86,4 +89,13 @@ if you are processing a lot of text, i.e. one or several books/stories/etc at on
    output = markov(text)  # Just one text (defaults to n-gram size of 1 and 5 output sentences)
    output = markov(text, ngram_size=3, num_output_sentence=7)  # Bigger n-gram size, more output sentences
    output = markov([text1, text2, text3])  # List of text (defaults to n-gram size of 1 and 5 output sentences)
-   output = markov([text1, text2, text3], ngram_size=3, num_output_sentences=7)  # Bigger n-gram size, more output
+   output = markov([text1, text2, text3], ngram_size=3, num_output_sentences=7)  # Bigger n-gram size, more outputs
+
+To virtually cut up and rearrange the text:
+
+.. code-block::
+
+   # Cuts up a text into cutouts between 3 and 7 words and then rearranges them randomly, returning a list of cut-up strings
+   cutouts = cutup(text)
+   # Cuts up a text into cutouts between 2 an 10 words and then rearranges then randomly, returning a list of cut-up strings
+   cutouts = cutup(text, min_cutout_words=3, max_cutout_words=7)
