@@ -188,4 +188,4 @@ def markov(input, ngram_size=1, num_output_sentences=5) -> str:
         sentence = textgen.make_sentence()
         if isinstance(sentence, str):
             output_sentences.append(sentence)
-    return " ".join(output_sentences)
+    return output_sentences
