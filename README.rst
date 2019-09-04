@@ -95,7 +95,7 @@ To virtually cut up and rearrange the text:
 
 .. code-block::
 
-   # Cuts up a text into cutouts between 3 and 7 words and then rearranges them randomly, returning a list of cut-up strings
+   # Cuts up a text into cutouts between 3 and 7 words and rearranges them randomly, returning a list of "cut-out" strings
    cutouts = cutup(text)
-   # Cuts up a text into cutouts between 2 an 10 words and then rearranges then randomly, returning a list of cut-up strings
+   # Cuts up a text into cutouts between 2 an 10 words and rearranges them randomly, returning a list of "cut-out" strings
    cutouts = cutup(text, min_cutout_words=3, max_cutout_words=7)
