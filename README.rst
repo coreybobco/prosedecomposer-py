@@ -12,13 +12,17 @@ There are many ways to write. In `Unoriginal Genius <http://writing.upenn.edu/~t
 
 Today there are countless ways to transform texts with software: Markov chains, cut-ups, substituting words for related words, swapping out verbs between books, GPT-2, BERT, etc. Today's cybernetic author can harness these as decomposing agents, destroying original texts to create messy new mélange that can be further edited, expanded upon, or synthesised into an original, meaningful work.
 
-This project elaborates on these ideas, allowing the user to sample random sentences and paragraphs from publicly available works of literature on **Project Gutenberg** and **Archive.org** or any text you give it.
+But what does this do?
+^^^^^^^^^^^^^^^^^^^^^^
+This project elaborates on these ideas, allowing the user to:
 
-It then allows you to swap adjectives and nouns... or any other part of speech... between samples from these document or any provided text, preserving the structure of a narrative or discursive formation while wildly changing the content.
+- sample random sentences and paragraphs from publicly available works of literature on **Project Gutenberg** and **Archive.org** or any text you give it.
+- swap words that share the same part of speech between two texts--for instance, swapping all of one text's adjectives with another's and one text's nouns with another's, preserving the structure of a narrative or discursive formation while wildly changing the content.
 
-Take, for example, this passage from Charles Dickens' *Great Expectations*, which transforms into surrealist horror when you replace the nouns and adjectives with those from a paragraph in H.P. Lovecraft's story *The Shunned House*:
+    Take, for example, this passage from Charles Dickens' *Great Expectations*, which transforms into surrealist horror when you replace the nouns and adjectives with those from a paragraph in H.P. Lovecraft's story *The Shunned House*:
 
-"It was then I began to understand that chimney in the eye had stopped, like the enveloping and the head, a human fungus ago. I noticed that Miss Havisham put down the height exactly on the time from which she had taken it up. As Estella dealt the streams, I glanced at the corpse-abhorrent again, and saw that the outline upon it, once few, now diseased, had never been worn. I glanced down at the sight from which the outline was insectoid, and saw that the half stocking on it, once few, now diseased, had been trodden ragged. Without this cosmos of thing, this standing still of all the worse monstrous attentions, not even the withered phosphorescent mist on the collapsed dissolving could have looked so like horror-mockings, or the human hideousness so like a horror."
+        "It was then I began to understand that chimney in the eye had stopped, like the enveloping and the head, a human fungus ago. I noticed that Miss Havisham put down the height exactly on the time from which she had taken it up. As Estella dealt the streams, I glanced at the corpse-abhorrent again, and saw that the outline upon it, once few, now diseased, had never been worn. I glanced down at the sight from which the outline was insectoid, and saw that the half stocking on it, once few, now diseased, had been trodden ragged. Without this cosmos of thing, this standing still of all the worse monstrous attentions, not even the withered phosphorescent mist on the collapsed dissolving could have looked so like horror-mockings, or the human hideousness so like a horror."
+- run individual texts or list of texts through a Markov chain, semi-intelligently recombining the words in a more or less chaotic manner depending on n-gram size (which defaults to 1, the most chaotic).
 
 Installation
 ^^^^^^^^^^^^
@@ -34,12 +38,16 @@ If the Gutenberg cache messes up after it is populated, delete the cache directo
 
 Usage
 ~~~~~~~~
+First, import the library:
+
+.. code-block::
+   from prosedecomposer import *
 
 To extract and clean the text from Project Gutenberg or Archive.org:
 
 .. code-block::
 
-    # From an Archive.org URL:
+   # From an Archive.org URL:
    calvino_text = get_internet_archive_document('https://archive.org/stream/CalvinoItaloCosmicomics/Calvino-Italo-Cosmicomics_djvu.txt')
    # From a Project Gutenberg URL:
    alice_in_wonderland = get_gutenberg_document('https://www.gutenberg.org/ebooks/11')
@@ -70,3 +78,12 @@ To swap words with the same part(s) of speech between texts:
    swap_parts_of_speech(doc1.random_paragraph(), doc2.random_paragraph(), parts_of_speech=["VERB", "CONJ"])
    # Since NLG has not yet been implemented, expect syntax errors like subject-verb agreement.
 
+To run text(s) through Markov chain text processing algorithms, see below. You may want a bigger n-gram size (2 or 3)
+if you are processing a lot of text, i.e. one or several books/stories/etc at once.
+
+.. code-block::
+
+   output = markov(text)  # Just one text (defaults to n-gram size of 1 and 5 output sentences)
+   output = markov(text, ngram_size=3, num_output_sentence=7)  # Bigger n-gram size, more output sentences
+   output = markov([text1, text2, text3])  # List of text (defaults to n-gram size of 1 and 5 output sentences)
+   output = markov([text1, text2, text3], ngram_size=3, num_output_sentences=7)  # Bigger n-gram size, more output

@@ -3,7 +3,9 @@ from prosedecomposer import *
 import inflect
 import spacy
 
-spacy_nlp = spacy.load('en_core_web_sm')
+spacy_nlp = spacy.load('en_core_web_sm', disable=['ner'])
+spacy_nlp.remove_pipe("parser")
+
 
 class TextExtractionTestCase(unittest.TestCase):
 
@@ -208,9 +210,8 @@ class TextProcessingTestCase(unittest.TestCase):
         for i, token in enumerate(new_ge_doc):
             expected_pos = great_expectations_pos_by_word_number.get(i, None)
             if expected_pos is 'NOUN':
-                # Note: inflector.plural returns the singularized noun if the noun is already plural
                 self.assertTrue(token.text in shunned_house_nouns or inflector.plural(token.text) in
-                                shunned_house_nouns)
+                                shunned_house_nouns or inflector.singular_noun(token.text) in shunned_house_nouns)
             elif token.pos is 'ADJ':
                 self.assertTrue(token.text in shunned_house_adjectives)
         for i, token in enumerate(new_sh_doc):
@@ -222,7 +223,29 @@ class TextProcessingTestCase(unittest.TestCase):
                 # Since there are only 21 nouns in the Dickens passage only that many substitutions can occur.
                 # Note: inflector.plural returns the singularized noun if the noun is already plural
                 self.assertTrue((token.text in great_expectations_nouns or inflector.plural(token.text)
+                                 in great_expectations_nouns or inflector.singular_noun(token.text)
                                  in great_expectations_nouns) or i > 20)
+
+    def test_markov(self):
+        # This does NOT test the markovify library itself, as that's out of scope and we can assume it does what it says
+        self.assertRaises(Exception, lambda: markov(2))
+        self.assertRaises(Exception, lambda: markov(2.5))
+        self.assertRaises(Exception, lambda: markov(None))
+        self.assertRaises(Exception, lambda: markov(False))
+        file = open('tests/Cosmicomics.txt', 'r')
+        cosmicomics = file.read()
+        file.close()
+        output = markov(cosmicomics)
+        # Sentence tokenization for Markov chains is kinda screwed up because they're nonsense
+        # self.assertEqual(len(sent_detector.tokenize(output)), 5)
+        output = markov(cosmicomics, num_output_sentences=3)
+        # self.assertEqual(len(sent_detector.tokenize(output)), 3)
+        file = open('tests/AliceinWonderland.txt', 'r')
+        alice_in_wonderland = file.read()
+        output = markov([alice_in_wonderland, cosmicomics])
+        # self.assertEqual(len(sent_detector.tokenize(output)), 5)
+        output = markov([alice_in_wonderland, cosmicomics], num_output_sentences=3)
+        # self.assertEqual(len(sent_detector.tokenize(output)), 3)
 
 
 if __name__ == '__main__':
