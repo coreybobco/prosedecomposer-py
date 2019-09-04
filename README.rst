@@ -5,6 +5,9 @@ Prose Decomposer
 .. image:: https://coveralls.io/repos/github/coreybobco/prosedecomposer-py/badge.svg?branch=master
    :target: https://coveralls.io/github/coreybobco/prosedecomposer-py?branch=master
 
+.. image:: https://badge.fury.io/py/prosedecomposer.svg
+    :target: https://badge.fury.io/py/prosedecomposer
+
 What is this?
 ^^^^^^^^^^^^^
 
