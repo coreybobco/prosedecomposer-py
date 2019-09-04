@@ -23,6 +23,7 @@ This project elaborates on these ideas, allowing the user to:
 - run individual texts or list of texts through a Markov chain, semi-intelligently recombining the words in a more or less chaotic manner depending on n-gram size (which defaults to 1, the most chaotic).
 
      Markov chain based generative algorithms like this one can create prose whose repetitions and permutations lend it a strange rhythm and which appears syntactically and semantically valid at first but eventually turns into nonsense. The Markov chain's formulaic yet sassy and subversive sstyle is quite similar Gertrude Stein's in `The Making Of Americans <gutenberg.net.au/ebooks16/1600671h.html>`_, which she explains in details in the essay `Composition as Explanation <https://www.poetryfoundation.org/articles/69481/composition-as-explanation>`_.
+- perform a virtual simulation of the `cut-up method <https://www.writing.upenn.edu/~afilreis/88v/burroughs-cutup.html>`_ pioneered by William S. Burroughs and Brion Gysin by breaking texts down into components of random length (where the minimum and and maximum length in words is preserved) and then randomly rearranging them.
 
 Installation
 ^^^^^^^^^^^^
@@ -95,7 +96,7 @@ To virtually cut up and rearrange the text:
 
 .. code-block::
 
-   # Cuts up a text into cutouts between 3 and 7 words and rearranges them randomly, returning a list of "cut-out" strings
+   # Cuts up a text into cutouts between 3 and 7 words and rearrange them randomly (returns a list of cutout strings)
    cutouts = cutup(text)
-   # Cuts up a text into cutouts between 2 an 10 words and rearranges them randomly, returning a list of "cut-out" strings
+   # Cuts up a text into cutouts between 2 an 10 words and rearrange them randomly (returns a list of cutout strings)
    cutouts = cutup(text, min_cutout_words=3, max_cutout_words=7)

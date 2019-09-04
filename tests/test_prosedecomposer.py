@@ -203,8 +203,8 @@ class TextProcessingTestCase(unittest.TestCase):
         shunned_house_pos_by_word_number = {}
         # Just test swapping nouns and adjectives for now
         new_ge_sample, new_sh_sample = swap_parts_of_speech(great_expectations_sample, shunned_house_sample)
-        print("\nAdjectives and Verbs Taken From Lovecraft And Swapped into Great Expectations:")
-        print(new_ge_sample)
+        print("\n\nAdjectives and Verbs Taken From Lovecraft And Swapped into Great Expectations:")
+        print(new_ge_sample + "\n")
         print("Adjectives and Verbs Taken From Great Expectations And Swapped into Great Lovecraft:")
         print(new_sh_sample)
         new_ge_doc, new_sh_doc = spacy_nlp(new_ge_sample), spacy_nlp(new_ge_sample)
@@ -268,7 +268,6 @@ class TextProcessingTestCase(unittest.TestCase):
         cutouts = cutup(burroughs_sample1)
         print("\n\nWilliam S. Burroughs Computer Cut-Up #1:\n" + " ".join(cutouts))
         for cutout in cutouts:
-            print(cutout + str(len(cutout.split())))
             # Cutout should be between the assumed min and max lengths unless it was cut out sequentially last from
             # the end of the book. This is true for all loops in this test.s
             self.assertTrue(3 <= len(cutout.split()) <= 7 or cutout.split()[-1] == burroughs_sample1.split()[-1])
@@ -287,12 +286,11 @@ class TextProcessingTestCase(unittest.TestCase):
         cutouts = cutup([burroughs_sample1, burroughs_sample2])
         print("\nWilliam S. Burroughs Computer Cut-Up #3:\n" + " ".join(cutouts))
         for cutout in cutouts:
-            print(cutout)
             self.assertTrue(3 <= len(cutout.split()) <= 7 or cutout.split()[-1] == burroughs_sample1.split()[-1] or
                             cutout == burroughs_sample2.split()[-1])
             self.assertTrue(cutout in burroughs_sample1 or cutout in burroughs_sample2)
         cutouts = cutup([burroughs_sample1, burroughs_sample2], min_cutout_words=2, max_cutout_words=10)
-        print("\nWilliam S. Burroughs Computer Cut-Up #3:\n" + " ".join(cutouts))
+        print("\nWilliam S. Burroughs Computer Cut-Up #4:\n" + " ".join(cutouts))
         for cutout in cutouts:
             self.assertTrue(2 <= len(cutout.split()) <= 10 or cutout.split()[-1] == burroughs_sample1.split()[-1] or
                             cutout == burroughs_sample2.split()[-1])
