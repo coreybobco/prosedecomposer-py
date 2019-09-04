@@ -35,6 +35,7 @@ OSX and Linux users must install hunspell first. Instructions for that can be fo
 For Gutenberg sampling to work properly, you must populate the Berkeley db cache:
 
 .. code-block::
+
    python3 populate_cache.py
 
 If the Gutenberg cache messes up after it is populated, delete the cache directory and re-populate.
@@ -45,6 +46,7 @@ How to Use
 First, import the library:
 
 .. code-block::
+
    from prosedecomposer import *
 
 To extract and clean the text from Project Gutenberg or Archive.org:
