@@ -1,4 +1,3 @@
-generativepoetry>=0.1.3
 Gutenberg==0.7.0
 -e git+https://github.com/coreybobco/gutenberg_cleaner@master#egg=gutenberg_cleaner
 inflect==2.1.0

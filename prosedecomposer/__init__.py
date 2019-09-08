@@ -18,7 +18,7 @@ sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 spacy_nlp = spacy.load('en_core_web_sm', disable=['ner'])
 spacy_nlp.remove_pipe("parser")
 inflector = inflect.engine()
-input_type = TypeVar('input_type', str, List[str])  # Must be str or bytes
+input_type = TypeVar('input_type', str, List[str])  # Must be str or list of strings
 
 
 class ParsedText:

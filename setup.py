@@ -4,7 +4,6 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'generativepoetry>=0.1.3',
     'Gutenberg==0.7.0',
     'inflect==2.1.0',
     'internetarchive==1.8.5',

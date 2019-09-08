@@ -11,7 +11,7 @@ Prose Decomposer
 What is this?
 ^^^^^^^^^^^^^
 
-There are many ways to write. In `Unoriginal Genius <http://writing.upenn.edu/~taransky/unoriginalgenius.pdf>`_, Marjorie Perloff contrasts the notion of 'original genius'--the mythic author of old who realizes works from the depths of their intellectual solitude--to a counter-tradition of 'unoriginal genius' including acts of plagiaristic parody (also known as détournement) and patchwriting. T.S. Eliot, James Joyce, and Thomas Pynchon are all exemplars of this style, having written their seminal works with encyclopedias, magazine, and newspaper clippings, or other literature open face, according to `Uncreative Writing <http://www.libgen.is/book/index.php?md5=3E70C36B115111E10E371C72864ADAB7>`_ by Kenneth Goldsmith.
+There are many ways to write. In `Unoriginal Genius <http://writing.upenn.edu/~taransky/unoriginalgenius.pdf>`_, Marjorie Perloff contrasts the notion of 'original genius'--the mythic author of old who realizes works from the depths of their intellectual solitude--to a counter-tradition of 'unoriginal genius' including acts of plagiaristic parody (also known as détournement) and patchwriting. T.S. Eliot, James Joyce, and Thomas Pynchon are all exemplars of this style, having written their seminal works with encyclopedias, magazine, newspaper clippings, and world literature open face, according to `Uncreative Writing <http://www.libgen.is/book/index.php?md5=3E70C36B115111E10E371C72864ADAB7>`_ by Kenneth Goldsmith.
 
 Today there are countless ways to transform texts with software: Markov chains, cut-ups, substituting words for related words, swapping out verbs between books, GPT-2, BERT, etc. Today's cybernetic author can harness these as decomposing agents, destroying original texts to create messy new mélange that can be further edited, expanded upon, or synthesised into an original, meaningful work.
 
@@ -31,17 +31,26 @@ This project elaborates on these ideas, allowing the user to:
 Installation
 ^^^^^^^^^^^^
 
-If you're on Windows, you have to use Docker.
+Using pip
+~~~~~~~~~
+.. code-block::
 
-OSX and Linux users must install hunspell first. Instructions for that can be found on my `generativepoetry <https://github.com/coreybobco/generativepoetry-py/>`_ module.
+   python3 -m pip generativepoetry
 
-For Gutenberg sampling to work properly, you must populate the Berkeley db cache:
+But for Gutenberg sampling to work properly, you must populate the Berkeley db cache:
 
 .. code-block::
 
    python3 populate_cache.py
 
 If the Gutenberg cache messes up after it is populated, delete the cache directory and re-populate.
+
+Using Docker
+~~~~~~~~~~~~
+
+docker pull coreybobco/prosedecomposer
+docker run prosedecomposer
+docker exec -it prosedecomposer python3
 
 How to Use
 ^^^^^^^^^^
