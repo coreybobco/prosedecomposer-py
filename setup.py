@@ -17,7 +17,7 @@ requirements = [
 
 setup(
     name='prosedecomposer',
-    version='0.1.0',
+    version='0.1.1',
     description='Decompose, transform, and recombine prose into mutated forms.',
     long_description=readme,
     author="Corey Bobco",
