@@ -8,7 +8,7 @@ requirements = [
     'inflect==2.1.0',
     'internetarchive==1.8.5',
     'markovify==0.7.1',
-    'nltk==3.4.5',
+    'nltk==3.9',
     'rdflib==4.2.2',
     'spacy==2.1.8',
     'unittest2==1.1.0',
